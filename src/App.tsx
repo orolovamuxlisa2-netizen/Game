@@ -100,8 +100,9 @@ export default function App() {
   const [ropePosition, setRopePosition] = useState(0); // -100 (Blue Wins) to 100 (Red Wins)
   const [leftProblem, setLeftProblem] = useState<Problem | null>(null);
   const [rightProblem, setRightProblem] = useState<Problem | null>(null);
-  const [gameState, setGameState] = useState<'playing' | 'won-blue' | 'won-red'>('playing');
+  const [gameState, setGameState] = useState<'lobby' | 'playing' | 'won-blue' | 'won-red'>('lobby');
   const [scores, setScores] = useState({ blue: 0, red: 0 });
+  const [totalCorrect, setTotalCorrect] = useState(0);
   const [pullSide, setPullSide] = useState<'blue' | 'red' | null>(null);
 
   const createSingleProblem = () => {
@@ -163,6 +164,7 @@ export default function App() {
       
       setRopePosition(newPos);
       setScores(prev => ({ ...prev, [side]: prev[side as 'blue' | 'red'] + 1 }));
+      setTotalCorrect(prev => prev + 1);
 
       if (newPos <= -100) setGameState('won-blue');
       if (newPos >= 100) setGameState('won-red');
@@ -183,8 +185,9 @@ export default function App() {
 
   const resetGame = () => {
     setRopePosition(0);
-    setGameState('playing');
+    setGameState('lobby');
     setScores({ blue: 0, red: 0 });
+    setTotalCorrect(0);
     refreshProblems();
   };
 
@@ -267,9 +270,36 @@ export default function App() {
           />
         </div>
 
-        {/* Victory Screen */}
+        {/* Victory Screen / Start Screen */}
         <AnimatePresence>
-          {gameState !== 'playing' && (
+          {gameState === 'lobby' && (
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center bg-blue-900/60 backdrop-blur-xl p-6"
+            >
+              <motion.div 
+                initial={{ scale: 0.8 }} animate={{ scale: 1 }}
+                className="bg-white p-12 rounded-[4rem] border-8 border-blue-400 flex flex-col items-center gap-8 shadow-2xl max-w-lg w-full text-center"
+              >
+                <div className="flex gap-4 items-end">
+                   <Character side="blue" pulling={false} />
+                   <div className="text-4xl font-black text-slate-800 self-center">VS</div>
+                   <Character side="red" isGirl pulling={false} />
+                </div>
+                <h2 className="text-5xl font-black tracking-tighter uppercase italic text-slate-900">
+                  MATEMATIKA JANGI!
+                </h2>
+                <button
+                  onClick={() => setGameState('playing')}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 rounded-[2rem] font-black uppercase text-3xl shadow-[0_8px_0_rgb(29,78,216)] active:translate-y-2 active:shadow-none transition-all flex items-center justify-center gap-4"
+                >
+                  <RefreshCcw size={40} /> BOSHLASH!
+                </button>
+              </motion.div>
+            </motion.div>
+          )}
+
+          {(gameState === 'won-blue' || gameState === 'won-red') && (
             <motion.div 
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="fixed inset-0 z-50 flex items-center justify-center bg-blue-900/60 backdrop-blur-xl p-6"
@@ -279,16 +309,19 @@ export default function App() {
                 className="bg-white p-12 rounded-[4rem] border-8 border-yellow-400 flex flex-col items-center gap-6 shadow-2xl max-w-lg w-full text-center"
               >
                 <div className={`p-8 rounded-full ${gameState === 'won-blue' ? 'bg-blue-100 text-blue-600' : 'bg-pink-100 text-pink-600'}`}>
-                  <Trophy size={120} />
+                  <Trophy size={100} />
                 </div>
-                <h2 className="text-6xl font-black tracking-tighter uppercase italic">
+                <h2 className="text-5xl font-black tracking-tighter uppercase italic text-slate-900">
                   {gameState === 'won-blue' ? 'O\'G\'ILLAR G\'ALABASI!' : 'QIZLAR G\'ALABASI!'}
                 </h2>
+                <div className="text-2xl font-black text-slate-600">
+                  Jami to'g'ri javoblar: <span className="text-slate-900">{totalCorrect}</span>
+                </div>
                 <button
                   onClick={resetGame}
                   className="w-full bg-yellow-400 hover:bg-yellow-500 text-slate-900 py-6 rounded-[2rem] font-black uppercase text-2xl shadow-[0_8px_0_rgb(202,138,4)] active:translate-y-2 active:shadow-none transition-all flex items-center justify-center gap-4"
                 >
-                  <RefreshCcw size={32} /> YANA O'YNAYMIZ!
+                  <RefreshCcw size={32} /> QAYTA O'YNAYMIZ!
                 </button>
               </motion.div>
             </motion.div>
